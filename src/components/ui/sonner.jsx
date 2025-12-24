@@ -1,12 +1,12 @@
-import { useTheme } from "next-themes";
+import * as React from "react";
 import { Toaster as Sonner, toast } from "sonner";
 
-const Toaster = ({ ...props }) => {
-  const { theme = "system" } = useTheme();
-
+const Toaster = React.forwardRef(function Toaster({ ...props }, ref) {
+  // Our app theme is managed by a local ThemeProvider that toggles the html class.
+  // Sonner can follow it via the className prop (no hook needed).
   return (
     <Sonner
-      theme={theme}
+      ref={ref}
       className="toaster group"
       toastOptions={{
         classNames: {
@@ -20,6 +20,6 @@ const Toaster = ({ ...props }) => {
       {...props}
     />
   );
-};
+});
 
 export { Toaster, toast };
