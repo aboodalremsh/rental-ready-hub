@@ -38,6 +38,7 @@ A modern, full-stack property rental application built with React, JavaScript, a
 - **React Hook Form** - Form handling with Zod validation
 
 ### Backend (Lovable Cloud)
+- **Node.js** - Server-side JavaScript runtime
 - **PostgreSQL Database** - Robust relational database
 - **Row Level Security (RLS)** - Secure data access policies
 - **Authentication** - Built-in auth with email/password
