@@ -100,25 +100,25 @@ export function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                 <span className="text-primary-foreground/70">
-                  123 Real Estate Blvd,<br />New York, NY 10001
+                  Business Bay, Dubai,<br />United Arab Emirates
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-accent" />
                 <a
-                  href="tel:+1234567890"
+                  href="tel:+97145551234"
                   className="text-primary-foreground/70 hover:text-accent transition-colors"
                 >
-                  +1 (234) 567-890
+                  +971 4 555 1234
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-accent" />
                 <a
-                  href="mailto:hello@rentease.com"
+                  href="mailto:hello@rentease.ae"
                   className="text-primary-foreground/70 hover:text-accent transition-colors"
                 >
-                  hello@rentease.com
+                  hello@rentease.ae
                 </a>
               </li>
             </ul>
