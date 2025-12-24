@@ -4,6 +4,10 @@ A modern, full-stack property rental application built with React, JavaScript, a
 
 ![RentEase](https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&h=400&fit=crop)
 
+## 🔗 Links
+
+- **GitHub Repository**: [View on GitHub](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME)
+
 ## 🏠 Features
 
 ### For Renters
