@@ -49,12 +49,13 @@ export default function PropertyDetail() {
 
   const checkIfSaved = async () => {
     if (!user || !id) return;
-    const { data } = await supabase
-      .from("saved_properties")
+    const { data, error } = await supabase
+      .from("saved_properties" as any)
       .select("id")
       .eq("user_id", user.id)
       .eq("property_id", id)
       .maybeSingle();
+    if (error) console.error("Check saved error:", error);
     setIsSaved(!!data);
   };
 
@@ -70,13 +71,14 @@ export default function PropertyDetail() {
     if (isSaved) {
       // Unsave
       const { error } = await supabase
-        .from("saved_properties")
+        .from("saved_properties" as any)
         .delete()
         .eq("user_id", user.id)
         .eq("property_id", id);
       
       if (error) {
-        toast({ title: "Error", description: "Failed to unsave property.", variant: "destructive" });
+        console.error("Unsave error:", error);
+        toast({ title: "Error", description: error.message || "Failed to unsave property.", variant: "destructive" });
       } else {
         setIsSaved(false);
         toast({ title: "Removed", description: "Property removed from saved list." });
@@ -84,11 +86,12 @@ export default function PropertyDetail() {
     } else {
       // Save
       const { error } = await supabase
-        .from("saved_properties")
+        .from("saved_properties" as any)
         .insert([{ user_id: user.id, property_id: id }]);
       
       if (error) {
-        toast({ title: "Error", description: "Failed to save property.", variant: "destructive" });
+        console.error("Save error:", error);
+        toast({ title: "Error", description: error.message || "Failed to save property.", variant: "destructive" });
       } else {
         setIsSaved(true);
         toast({ title: "Saved!", description: "Property added to your saved list." });
