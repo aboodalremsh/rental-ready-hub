@@ -21,6 +21,8 @@ export default function PropertyDetail() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [showRentalForm, setShowRentalForm] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingProperty, setSavingProperty] = useState(false);
   const [rentalData, setRentalData] = useState({
     startDate: format(new Date(), "yyyy-MM-dd"),
     endDate: format(addMonths(new Date(), 12), "yyyy-MM-dd"),
@@ -32,11 +34,67 @@ export default function PropertyDetail() {
     fetchProperty();
   }, [id]);
 
+  useEffect(() => {
+    if (user && id) {
+      checkIfSaved();
+    }
+  }, [user, id]);
+
   const fetchProperty = async () => {
     if (!id) return;
-    const { data, error } = await supabase.from("properties").select("*").eq("id", id).single();
+    const { data, error } = await supabase.from("properties").select("*").eq("id", id).maybeSingle();
     if (!error && data) setProperty(data as Property);
     setLoading(false);
+  };
+
+  const checkIfSaved = async () => {
+    if (!user || !id) return;
+    const { data } = await supabase
+      .from("saved_properties")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("property_id", id)
+      .maybeSingle();
+    setIsSaved(!!data);
+  };
+
+  const handleSaveProperty = async () => {
+    if (!user) {
+      toast({ title: "Please sign in", description: "You need to be logged in to save properties.", variant: "destructive" });
+      return;
+    }
+    if (!id) return;
+
+    setSavingProperty(true);
+    
+    if (isSaved) {
+      // Unsave
+      const { error } = await supabase
+        .from("saved_properties")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("property_id", id);
+      
+      if (error) {
+        toast({ title: "Error", description: "Failed to unsave property.", variant: "destructive" });
+      } else {
+        setIsSaved(false);
+        toast({ title: "Removed", description: "Property removed from saved list." });
+      }
+    } else {
+      // Save
+      const { error } = await supabase
+        .from("saved_properties")
+        .insert([{ user_id: user.id, property_id: id }]);
+      
+      if (error) {
+        toast({ title: "Error", description: "Failed to save property.", variant: "destructive" });
+      } else {
+        setIsSaved(true);
+        toast({ title: "Saved!", description: "Property added to your saved list." });
+      }
+    }
+    setSavingProperty(false);
   };
 
   const handleRentalSubmit = async (e: React.FormEvent) => {
@@ -172,8 +230,15 @@ export default function PropertyDetail() {
                   <Button variant="gold" size="lg" className="w-full" onClick={() => setShowRentalForm(true)}>
                     Apply to Rent
                   </Button>
-                  <Button variant="outline" size="lg" className="w-full">
-                    <Heart className="h-4 w-4 mr-2" /> Save Property
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="w-full" 
+                    onClick={handleSaveProperty}
+                    disabled={savingProperty}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${isSaved ? "fill-red-500 text-red-500" : ""}`} /> 
+                    {savingProperty ? "Saving..." : isSaved ? "Saved" : "Save Property"}
                   </Button>
                 </div>
               ) : (
