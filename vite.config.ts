@@ -13,8 +13,10 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Force a single React instance (prevents "Invalid hook call" issues)
+      react: path.resolve(__dirname, "./node_modules/react"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
     },
-    // Prevent "Invalid hook call" errors caused by multiple React copies in the bundle.
     dedupe: ["react", "react-dom"],
   },
 }));
