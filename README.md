@@ -203,5 +203,3 @@ This project is maintained through Lovable. To contribute:
 2. Changes sync automatically between Lovable and GitHub
 
 ---
-
-Built with ❤️ using [Lovable](https://lovable.dev)
