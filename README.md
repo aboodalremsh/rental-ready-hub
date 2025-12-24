@@ -1,6 +1,6 @@
 # RentEase - Property Rental Platform
 
-A modern, full-stack property rental application built with React, TypeScript, and Supabase. RentEase connects property owners with renters, offering a seamless experience for browsing, saving, and renting properties.
+A modern, full-stack property rental application built with React, JavaScript, and Lovable Cloud. RentEase connects property owners with renters, offering a seamless experience for browsing, saving, and renting properties.
 
 ![RentEase](https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&h=400&fit=crop)
 
@@ -28,7 +28,7 @@ A modern, full-stack property rental application built with React, TypeScript, a
 
 ### Frontend
 - **React 18** - Modern React with hooks and functional components
-- **TypeScript** - Type-safe development
+- **JavaScript (ES6+)** - Clean, readable code with JSDoc type hints
 - **Vite** - Fast build tool and development server
 - **Tailwind CSS** - Utility-first CSS framework
 - **shadcn/ui** - Beautiful, accessible UI components
@@ -37,7 +37,7 @@ A modern, full-stack property rental application built with React, TypeScript, a
 - **React Query** - Server state management
 - **React Hook Form** - Form handling with Zod validation
 
-### Backend (Lovable Cloud / Supabase)
+### Backend (Lovable Cloud)
 - **PostgreSQL Database** - Robust relational database
 - **Row Level Security (RLS)** - Secure data access policies
 - **Authentication** - Built-in auth with email/password
@@ -49,29 +49,30 @@ A modern, full-stack property rental application built with React, TypeScript, a
 src/
 ├── components/
 │   ├── layout/          # Header, Footer, Layout components
-│   ├── ui/              # shadcn/ui components
-│   └── NavLink.tsx      # Navigation link component
+│   ├── ui/              # shadcn/ui components (JSX)
+│   └── NavLink.jsx      # Navigation link component
 ├── hooks/
-│   ├── useAuth.tsx      # Authentication hook
-│   ├── useTheme.tsx     # Theme management hook
-│   └── use-mobile.tsx   # Mobile detection hook
+│   ├── useAuth.jsx      # Authentication hook
+│   ├── useTheme.jsx     # Theme management hook
+│   ├── use-toast.js     # Toast notification hook
+│   └── use-mobile.jsx   # Mobile detection hook
 ├── integrations/
 │   └── supabase/        # Supabase client and types
 ├── pages/
-│   ├── Index.tsx        # Landing page
-│   ├── Properties.tsx   # Property listings
-│   ├── PropertyDetail.tsx # Single property view
-│   ├── Dashboard.tsx    # User dashboard
-│   ├── Auth.tsx         # Login/Signup page
-│   ├── About.tsx        # About page
-│   ├── Services.tsx     # Services page
-│   ├── Contact.tsx      # Contact form
-│   └── NotFound.tsx     # 404 page
+│   ├── Index.jsx        # Landing page
+│   ├── Properties.jsx   # Property listings
+│   ├── PropertyDetail.jsx # Single property view
+│   ├── Dashboard.jsx    # User dashboard
+│   ├── Auth.jsx         # Login/Signup page
+│   ├── About.jsx        # About page
+│   ├── Services.jsx     # Services page
+│   ├── Contact.jsx      # Contact form
+│   └── NotFound.jsx     # 404 page
 ├── types/
-│   └── property.ts      # Property type definitions
+│   └── property.js      # Property type definitions (JSDoc)
 ├── lib/
-│   └── utils.ts         # Utility functions
-└── App.tsx              # Main app component with routes
+│   └── utils.js         # Utility functions
+└── App.jsx              # Main app component with routes
 ```
 
 ## 🗄️ Database Schema
@@ -116,7 +117,7 @@ npm install
 npm run dev
 ```
 
-4. Open [http://localhost:5173](http://localhost:5173) in your browser
+4. Open [http://localhost:8080](http://localhost:8080) in your browser
 
 ## 📱 Pages Overview
 
