@@ -33,18 +33,26 @@ async function apiRequest(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(data.error || 'API request failed');
+    if (!response.ok) {
+      throw new Error(data.error || 'API request failed');
+    }
+
+    return data;
+  } catch (error) {
+    // Handle network errors (backend not running)
+    if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
+      throw new Error('Backend server is not running. Start the Node.js server.');
+    }
+    throw error;
   }
-
-  return data;
 }
 
 // ============ AUTH API ============
