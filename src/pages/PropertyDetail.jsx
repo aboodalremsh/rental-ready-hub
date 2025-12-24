@@ -8,13 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/layout/Layout";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { propertiesApi, savedApi, rentalsApi } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuthLocal";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PropertyDetail() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,32 +34,35 @@ export default function PropertyDetail() {
   }, [id]);
 
   useEffect(() => {
-    if (user && id) {
+    if (isAuthenticated && id) {
       checkIfSaved();
     }
-  }, [user, id]);
+  }, [isAuthenticated, id]);
 
   const fetchProperty = async () => {
     if (!id) return;
-    const { data, error } = await supabase.from("properties").select("*").eq("id", id).maybeSingle();
-    if (!error && data) setProperty(data);
-    setLoading(false);
+    try {
+      const data = await propertiesApi.getById(id);
+      setProperty(data);
+    } catch (error) {
+      console.error("Failed to fetch property:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const checkIfSaved = async () => {
-    if (!user || !id) return;
-    const { data, error } = await supabase
-      .from("saved_properties")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("property_id", id)
-      .maybeSingle();
-    if (error) console.error("Check saved error:", error);
-    setIsSaved(!!data);
+    if (!isAuthenticated || !id) return;
+    try {
+      const saved = await savedApi.check(id);
+      setIsSaved(saved);
+    } catch (error) {
+      console.error("Check saved error:", error);
+    }
   };
 
   const handleSaveProperty = async () => {
-    if (!user) {
+    if (!isAuthenticated) {
       toast({ title: "Please sign in", description: "You need to be logged in to save properties.", variant: "destructive" });
       return;
     }
@@ -67,61 +70,43 @@ export default function PropertyDetail() {
 
     setSavingProperty(true);
     
-    if (isSaved) {
-      // Unsave
-      const { error } = await supabase
-        .from("saved_properties")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("property_id", id);
-      
-      if (error) {
-        console.error("Unsave error:", error);
-        toast({ title: "Error", description: error.message || "Failed to unsave property.", variant: "destructive" });
-      } else {
+    try {
+      if (isSaved) {
+        await savedApi.unsave(id);
         setIsSaved(false);
         toast({ title: "Removed", description: "Property removed from saved list." });
-      }
-    } else {
-      // Save
-      const { error } = await supabase
-        .from("saved_properties")
-        .insert([{ user_id: user.id, property_id: id }]);
-      
-      if (error) {
-        console.error("Save error:", error);
-        toast({ title: "Error", description: error.message || "Failed to save property.", variant: "destructive" });
       } else {
+        await savedApi.save(id);
         setIsSaved(true);
         toast({ title: "Saved!", description: "Property added to your saved list." });
       }
+    } catch (error) {
+      toast({ title: "Error", description: error.message || "Failed to update saved status.", variant: "destructive" });
     }
     setSavingProperty(false);
   };
 
   const handleRentalSubmit = async (e) => {
     e.preventDefault();
-    if (!user) {
+    if (!isAuthenticated) {
       toast({ title: "Please sign in", description: "You need to be logged in to rent a property.", variant: "destructive" });
       return;
     }
     if (!property) return;
 
     setSubmitting(true);
-    const { error } = await supabase.from("rentals").insert([{
-      property_id: property.id,
-      user_id: user.id,
-      start_date: rentalData.startDate,
-      end_date: rentalData.endDate,
-      notes: rentalData.notes,
-      total_amount: property.price * 12,
-    }]);
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to submit rental request.", variant: "destructive" });
-    } else {
+    try {
+      await rentalsApi.create({
+        property_id: property.id,
+        start_date: rentalData.startDate,
+        end_date: rentalData.endDate,
+        notes: rentalData.notes,
+        total_amount: property.price * 12,
+      });
       toast({ title: "Request Submitted!", description: "We'll review your application and get back to you soon." });
       setShowRentalForm(false);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to submit rental request.", variant: "destructive" });
     }
     setSubmitting(false);
   };
@@ -151,7 +136,14 @@ export default function PropertyDetail() {
     );
   }
 
-  const images = property.images || ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"];
+  // Parse images if it's still a string
+  const images = typeof property.images === 'string' 
+    ? JSON.parse(property.images) 
+    : property.images || ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"];
+  
+  const amenities = typeof property.amenities === 'string'
+    ? JSON.parse(property.amenities)
+    : property.amenities || [];
 
   return (
     <Layout>
@@ -205,11 +197,11 @@ export default function PropertyDetail() {
               <p className="text-muted-foreground mb-6">{property.description}</p>
 
               {/* Amenities */}
-              {property.amenities && property.amenities.length > 0 && (
+              {amenities.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3">Amenities</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {property.amenities.map((amenity) => (
+                    {amenities.map((amenity) => (
                       <div key={amenity} className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-accent" /> {amenity}
                       </div>

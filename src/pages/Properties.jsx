@@ -5,7 +5,7 @@ import { Search, MapPin, Bed, Bath } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Layout } from "@/components/layout/Layout";
-import { supabase } from "@/integrations/supabase/client";
+import { propertiesApi } from "@/lib/api";
 
 const propertyTypes = ["all", "apartment", "office", "studio", "penthouse", "commercial"];
 
@@ -21,16 +21,14 @@ export default function Properties() {
   }, []);
 
   const fetchProperties = async () => {
-    const { data, error } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("status", "available")
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
+    try {
+      const data = await propertiesApi.getAll();
       setProperties(data);
+    } catch (error) {
+      console.error("Failed to fetch properties:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const filteredProperties = properties.filter((p) => {
@@ -115,55 +113,62 @@ export default function Properties() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProperties.map((property, i) => (
-                <motion.div
-                  key={property.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="group bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-medium transition-all duration-300"
-                >
-                  <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={property.images?.[0] || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"}
-                      alt={property.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent text-accent-foreground text-sm font-medium capitalize">
-                      {property.property_type}
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
-                      <MapPin className="h-4 w-4" />
-                      {property.city}, {property.state}
-                    </div>
-                    <h3 className="text-xl font-semibold mb-3 group-hover:text-accent transition-colors">
-                      {property.title}
-                    </h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                      {property.bedrooms && property.bedrooms > 0 && (
-                        <span className="flex items-center gap-1"><Bed className="h-4 w-4" /> {property.bedrooms} Beds</span>
-                      )}
-                      {property.bathrooms && (
-                        <span className="flex items-center gap-1"><Bath className="h-4 w-4" /> {property.bathrooms} Baths</span>
-                      )}
-                      {property.area_sqft && (
-                        <span>{property.area_sqft.toLocaleString()} sqft</span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold">
-                        ${property.price.toLocaleString()}
-                        <span className="text-sm font-normal text-muted-foreground">/mo</span>
+              {filteredProperties.map((property, i) => {
+                // Parse images if it's a JSON string
+                const images = typeof property.images === 'string' 
+                  ? JSON.parse(property.images) 
+                  : property.images;
+                
+                return (
+                  <motion.div
+                    key={property.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="group bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-medium transition-all duration-300"
+                  >
+                    <div className="relative h-64 overflow-hidden">
+                      <img
+                        src={images?.[0] || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"}
+                        alt={property.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent text-accent-foreground text-sm font-medium capitalize">
+                        {property.property_type}
                       </div>
-                      <Link to={`/property/${property.id}`}>
-                        <Button variant="outline" size="sm">View Details</Button>
-                      </Link>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+                        <MapPin className="h-4 w-4" />
+                        {property.city}, {property.state}
+                      </div>
+                      <h3 className="text-xl font-semibold mb-3 group-hover:text-accent transition-colors">
+                        {property.title}
+                      </h3>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                        {property.bedrooms && property.bedrooms > 0 && (
+                          <span className="flex items-center gap-1"><Bed className="h-4 w-4" /> {property.bedrooms} Beds</span>
+                        )}
+                        {property.bathrooms && (
+                          <span className="flex items-center gap-1"><Bath className="h-4 w-4" /> {property.bathrooms} Baths</span>
+                        )}
+                        {property.area_sqft && (
+                          <span>{property.area_sqft.toLocaleString()} sqft</span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold">
+                          ${property.price.toLocaleString()}
+                          <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                        </div>
+                        <Link to={`/property/${property.id}`}>
+                          <Button variant="outline" size="sm">View Details</Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>

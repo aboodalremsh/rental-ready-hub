@@ -6,7 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuthLocal";
 import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
@@ -80,25 +80,16 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-full max-w-md"
-        >
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="w-full max-w-md">
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xl">R</span>
             </div>
             <span className="text-xl font-bold">RentEase</span>
           </Link>
-
           <h1 className="text-3xl font-bold mb-2">{isSignUp ? "Create an account" : "Welcome back"}</h1>
-          <p className="text-muted-foreground mb-8">
-            {isSignUp ? "Start your journey to find the perfect rental" : "Sign in to continue"}
-          </p>
-
+          <p className="text-muted-foreground mb-8">{isSignUp ? "Start your journey to find the perfect rental" : "Sign in to continue"}</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
@@ -143,17 +134,12 @@ export default function Auth() {
               {loading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
             </Button>
           </form>
-
           <p className="text-center text-muted-foreground mt-6">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button onClick={() => setIsSignUp(!isSignUp)} className="text-accent hover:underline font-medium">
-              {isSignUp ? "Sign In" : "Sign Up"}
-            </button>
+            <button onClick={() => setIsSignUp(!isSignUp)} className="text-accent hover:underline font-medium">{isSignUp ? "Sign In" : "Sign Up"}</button>
           </p>
         </motion.div>
       </div>
-
-      {/* Right Side - Image */}
       <div className="hidden lg:block flex-1 relative">
         <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200" alt="Luxury property" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-primary/60" />
