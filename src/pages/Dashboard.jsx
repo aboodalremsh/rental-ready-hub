@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuthLocal";
+import { rentalsApi } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,67 +10,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Home, Calendar, Clock, MapPin } from "lucide-react";
 import { format } from "date-fns";
 
-/**
- * @typedef {Object} RentalProperty
- * @property {string} id
- * @property {string} title
- * @property {string} address
- * @property {string} city
- * @property {string[]} images
- */
-
-/**
- * @typedef {Object} Rental
- * @property {string} id
- * @property {string} status
- * @property {string} start_date
- * @property {string} end_date
- * @property {number} total_amount
- * @property {string} created_at
- * @property {RentalProperty|null} property
- */
-
 export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  /** @type {[Rental[], React.Dispatch<React.SetStateAction<Rental[]>>]} */
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !isAuthenticated) {
       navigate("/auth");
     }
-  }, [user, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       fetchRentals();
     }
-  }, [user]);
+  }, [isAuthenticated]);
 
   const fetchRentals = async () => {
     try {
-      const { data, error } = await supabase
-        .from("rentals")
-        .select(`
-          id,
-          status,
-          start_date,
-          end_date,
-          total_amount,
-          created_at,
-          property:properties (
-            id,
-            title,
-            address,
-            city,
-            images
-          )
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const data = await rentalsApi.getMyRentals();
       setRentals(data || []);
     } catch (error) {
       console.error("Error fetching rentals:", error);
@@ -79,9 +39,6 @@ export default function Dashboard() {
     }
   };
 
-  /**
-   * @param {string} status
-   */
   const getStatusColor = (status) => {
     switch (status) {
       case "approved":
@@ -151,57 +108,62 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {rentals.map((rental) => (
-                    <div
-                      key={rental.id}
-                      className="flex flex-col md:flex-row gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      {rental.property?.images?.[0] && (
-                        <img
-                          src={rental.property.images[0]}
-                          alt={rental.property.title}
-                          className="w-full md:w-32 h-24 object-cover rounded-lg"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-semibold">
-                            {rental.property?.title || "Property"}
-                          </h4>
-                          <Badge className={getStatusColor(rental.status)}>
-                            {rental.status}
-                          </Badge>
-                        </div>
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {rental.property?.city}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {format(new Date(rental.start_date), "MMM d, yyyy")} -{" "}
-                            {format(new Date(rental.end_date), "MMM d, yyyy")}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            Applied {format(new Date(rental.created_at), "MMM d, yyyy")}
-                          </span>
-                        </div>
-                        {rental.total_amount && (
-                          <p className="mt-2 font-medium text-primary">
-                            AED {rental.total_amount.toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/property/${rental.property?.id}`)}
+                  {rentals.map((rental) => {
+                    // Parse images if needed
+                    const images = rental.property?.images || [];
+                    
+                    return (
+                      <div
+                        key={rental.id}
+                        className="flex flex-col md:flex-row gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                       >
-                        View Property
-                      </Button>
-                    </div>
-                  ))}
+                        {images[0] && (
+                          <img
+                            src={images[0]}
+                            alt={rental.property?.title}
+                            className="w-full md:w-32 h-24 object-cover rounded-lg"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="font-semibold">
+                              {rental.property?.title || "Property"}
+                            </h4>
+                            <Badge className={getStatusColor(rental.status)}>
+                              {rental.status}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {rental.property?.city}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {format(new Date(rental.start_date), "MMM d, yyyy")} -{" "}
+                              {format(new Date(rental.end_date), "MMM d, yyyy")}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              Applied {format(new Date(rental.created_at), "MMM d, yyyy")}
+                            </span>
+                          </div>
+                          {rental.total_amount && (
+                            <p className="mt-2 font-medium text-primary">
+                              ${rental.total_amount.toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/property/${rental.property_id}`)}
+                        >
+                          View Property
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
