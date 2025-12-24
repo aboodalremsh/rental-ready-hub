@@ -184,22 +184,3 @@ npm run lint
 | `date-fns` | Date formatting |
 | `sonner` | Toast notifications |
 
-## 🌐 Deployment
-
-The app can be deployed via Lovable:
-1. Click **Share** → **Publish** in the Lovable editor
-2. Your app will be live at `yourproject.lovable.app`
-
-For custom domains, go to **Project** → **Settings** → **Domains**.
-
-## 📄 License
-
-This project is private and proprietary.
-
-## 🤝 Contributing
-
-This project is maintained through Lovable. To contribute:
-1. Make changes in Lovable or push to the connected GitHub repository
-2. Changes sync automatically between Lovable and GitHub
-
----
