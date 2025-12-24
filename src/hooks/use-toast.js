@@ -1,182 +1,49 @@
-import * as React from "react";
+// Toast API compatibility layer.
+//
+// The previous shadcn/ui toast implementation relied on a React hook-based store.
+// In this project it has been triggering "Invalid hook call" at runtime, causing a blank screen.
+//
+// We keep the same external API (useToast() + toast({...})) but delegate rendering to Sonner,
+// which doesn't require a React hook-based global store.
 
-const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
-
-/**
- * @typedef {Object} ToasterToast
- * @property {string} id
- * @property {React.ReactNode} [title]
- * @property {React.ReactNode} [description]
- * @property {React.ReactElement} [action]
- * @property {boolean} [open]
- * @property {(open: boolean) => void} [onOpenChange]
- * @property {'default' | 'destructive'} [variant]
- */
-
-const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
-};
-
-let count = 0;
-
-function genId() {
-  count = (count + 1) % Number.MAX_SAFE_INTEGER;
-  return count.toString();
-}
-
-/** @type {Map<string, ReturnType<typeof setTimeout>>} */
-const toastTimeouts = new Map();
+import { toast as sonnerToast } from "@/components/ui/sonner";
 
 /**
- * @param {string} toastId
+ * Backwards-compatible toast function.
+ * Supports the shadcn-style signature: toast({ title, description, variant }).
  */
-const addToRemoveQueue = (toastId) => {
-  if (toastTimeouts.has(toastId)) {
-    return;
+function toast(input) {
+  // Allow simple usage: toast("Hello")
+  if (typeof input === "string") {
+    return sonnerToast(input);
   }
 
-  const timeout = setTimeout(() => {
-    toastTimeouts.delete(toastId);
-    dispatch({
-      type: "REMOVE_TOAST",
-      toastId: toastId,
-    });
-  }, TOAST_REMOVE_DELAY);
+  const title = input?.title;
+  const description = input?.description;
+  const variant = input?.variant;
 
-  toastTimeouts.set(toastId, timeout);
-};
+  // Sonner needs a "message" (first argument). If no title provided, use description as message.
+  const message = title ?? description ?? "";
+  const sonnerDescription = title ? description : undefined;
 
-/**
- * @typedef {Object} State
- * @property {ToasterToast[]} toasts
- */
-
-/**
- * @param {State} state
- * @param {Object} action
- * @returns {State}
- */
-export const reducer = (state, action) => {
-  switch (action.type) {
-    case "ADD_TOAST":
-      return {
-        ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
-      };
-
-    case "UPDATE_TOAST":
-      return {
-        ...state,
-        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
-      };
-
-    case "DISMISS_TOAST": {
-      const { toastId } = action;
-
-      if (toastId) {
-        addToRemoveQueue(toastId);
-      } else {
-        state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id);
-        });
-      }
-
-      return {
-        ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
-            : t,
-        ),
-      };
-    }
-    case "REMOVE_TOAST":
-      if (action.toastId === undefined) {
-        return {
-          ...state,
-          toasts: [],
-        };
-      }
-      return {
-        ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.toastId),
-      };
+  if (variant === "destructive") {
+    return sonnerToast.error(message || "Error", { description: sonnerDescription });
   }
-};
 
-/** @type {Array<(state: State) => void>} */
-const listeners = [];
-
-/** @type {State} */
-let memoryState = { toasts: [] };
-
-/**
- * @param {Object} action
- */
-function dispatch(action) {
-  memoryState = reducer(memoryState, action);
-  listeners.forEach((listener) => {
-    listener(memoryState);
-  });
+  return sonnerToast(message || "", { description: sonnerDescription });
 }
 
 /**
- * @param {Omit<ToasterToast, 'id'>} props
+ * Backwards-compatible hook.
+ * NOTE: This intentionally does NOT use React hooks.
  */
-function toast({ ...props }) {
-  const id = genId();
-
-  const update = (props) =>
-    dispatch({
-      type: "UPDATE_TOAST",
-      toast: { ...props, id },
-    });
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id });
-
-  dispatch({
-    type: "ADD_TOAST",
-    toast: {
-      ...props,
-      id,
-      open: true,
-      onOpenChange: (open) => {
-        if (!open) dismiss();
-      },
-    },
-  });
-
-  return {
-    id: id,
-    dismiss,
-    update,
-  };
-}
-
 function useToast() {
-  const [state, setState] = React.useState(memoryState);
-
-  React.useEffect(() => {
-    listeners.push(setState);
-    return () => {
-      const index = listeners.indexOf(setState);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
-    };
-  }, []);
-
   return {
-    ...state,
+    toasts: [],
     toast,
-    dismiss: (toastId) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    dismiss: (toastId) => sonnerToast.dismiss(toastId),
   };
 }
 
 export { useToast, toast };
+
