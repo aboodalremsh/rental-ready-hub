@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MapPin, Bed, Bath, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
+import { BackendStatus } from "@/components/BackendStatus";
 
 const featuredProperties = [
   { id: "1", title: "Luxury Downtown Penthouse", city: "New York", price: 8500, bedrooms: 4, bathrooms: 3, image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800", type: "penthouse" },
@@ -32,6 +33,9 @@ export default function Index() {
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
+          <div className="absolute top-4 right-4">
+            <BackendStatus />
+          </div>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
