@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/layout/Layout";
-import { supabase } from "@/integrations/supabase/client";
+import { contactApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 const contactSchema = z.object({
@@ -46,45 +46,31 @@ export default function Contact() {
     }
 
     setLoading(true);
-    const { error } = await supabase.from("contact_messages").insert([formData]);
-
-    if (error) {
-      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
-    } else {
+    try {
+      await contactApi.send(formData);
       toast({ title: "Message Sent!", description: "We'll get back to you within 24 hours." });
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
     }
     setLoading(false);
   };
 
   return (
     <Layout>
-      {/* Hero */}
       <section className="bg-primary py-20">
         <div className="container mx-auto px-4 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4"
-          >
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
             Contact Us
           </motion.h1>
-          <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">
-            Have questions? We'd love to hear from you.
-          </p>
+          <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">Have questions? We'd love to hear from you.</p>
         </div>
       </section>
 
-      {/* Contact Section */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              className="bg-card p-8 rounded-2xl shadow-card"
-            >
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} className="bg-card p-8 rounded-2xl shadow-card">
               <h2 className="text-2xl font-bold mb-6">Send us a message</h2>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid md:grid-cols-2 gap-4">
@@ -122,12 +108,7 @@ export default function Contact() {
               </form>
             </motion.div>
 
-            {/* Contact Info & Map */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              className="space-y-8"
-            >
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} className="space-y-8">
               <div className="bg-card p-8 rounded-2xl shadow-card">
                 <h2 className="text-2xl font-bold mb-6">Get in touch</h2>
                 <div className="space-y-6">
@@ -139,9 +120,7 @@ export default function Contact() {
                       <div>
                         <p className="font-medium">{item.label}</p>
                         {item.href ? (
-                          <a href={item.href} className="text-muted-foreground hover:text-accent transition-colors">
-                            {item.value}
-                          </a>
+                          <a href={item.href} className="text-muted-foreground hover:text-accent transition-colors">{item.value}</a>
                         ) : (
                           <p className="text-muted-foreground">{item.value}</p>
                         )}
@@ -151,7 +130,6 @@ export default function Contact() {
                 </div>
               </div>
 
-              {/* Map Placeholder */}
               <div className="bg-card rounded-2xl overflow-hidden shadow-card h-64">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9663095919364!2d-74.00425878428698!3d40.74076794379132!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1635959993726!5m2!1sen!2sus"
