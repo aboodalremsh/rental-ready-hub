@@ -1,73 +1,201 @@
-# Welcome to your Lovable project
+# RentEase - Property Rental Platform
 
-## Project info
+A modern, full-stack property rental application built with React, TypeScript, and Supabase. RentEase connects property owners with renters, offering a seamless experience for browsing, saving, and renting properties.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+![RentEase](https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&h=400&fit=crop)
 
-## How can I edit this code?
+## 🏠 Features
 
-There are several ways of editing your application.
+### For Renters
+- **Browse Properties** - Explore available apartments, offices, studios, penthouses, and commercial spaces
+- **Advanced Filtering** - Search by location, property type, and price range
+- **Save Favorites** - Save properties to your personal list for later review
+- **Rental Applications** - Submit rental applications directly through the platform
+- **Dashboard** - Track all your rental applications and their status
 
-**Use Lovable**
+### For Property Owners
+- **List Properties** - Add properties with detailed descriptions, images, and amenities
+- **Manage Listings** - Update property status (available, rented, maintenance)
+- **Track Rentals** - Monitor rental applications and tenant information
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### General Features
+- **User Authentication** - Secure signup and login with email
+- **Responsive Design** - Fully responsive UI that works on all devices
+- **Real-time Updates** - Live updates for property availability and application status
+- **Contact System** - Built-in contact form for inquiries
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+### Frontend
+- **React 18** - Modern React with hooks and functional components
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Beautiful, accessible UI components
+- **Framer Motion** - Smooth animations and transitions
+- **React Router** - Client-side routing
+- **React Query** - Server state management
+- **React Hook Form** - Form handling with Zod validation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend (Lovable Cloud / Supabase)
+- **PostgreSQL Database** - Robust relational database
+- **Row Level Security (RLS)** - Secure data access policies
+- **Authentication** - Built-in auth with email/password
+- **Real-time Subscriptions** - Live data updates
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 📁 Project Structure
 
-Follow these steps:
+```
+src/
+├── components/
+│   ├── layout/          # Header, Footer, Layout components
+│   ├── ui/              # shadcn/ui components
+│   └── NavLink.tsx      # Navigation link component
+├── hooks/
+│   ├── useAuth.tsx      # Authentication hook
+│   ├── useTheme.tsx     # Theme management hook
+│   └── use-mobile.tsx   # Mobile detection hook
+├── integrations/
+│   └── supabase/        # Supabase client and types
+├── pages/
+│   ├── Index.tsx        # Landing page
+│   ├── Properties.tsx   # Property listings
+│   ├── PropertyDetail.tsx # Single property view
+│   ├── Dashboard.tsx    # User dashboard
+│   ├── Auth.tsx         # Login/Signup page
+│   ├── About.tsx        # About page
+│   ├── Services.tsx     # Services page
+│   ├── Contact.tsx      # Contact form
+│   └── NotFound.tsx     # 404 page
+├── types/
+│   └── property.ts      # Property type definitions
+├── lib/
+│   └── utils.ts         # Utility functions
+└── App.tsx              # Main app component with routes
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+## 🗄️ Database Schema
+
+### Tables
+
+| Table | Description |
+|-------|-------------|
+| `profiles` | User profile information |
+| `properties` | Property listings with details |
+| `rentals` | Rental applications and contracts |
+| `saved_properties` | User's saved/favorited properties |
+| `contact_messages` | Contact form submissions |
+
+### Enums
+
+- **property_type**: `apartment`, `office`, `studio`, `penthouse`, `commercial`
+- **property_status**: `available`, `rented`, `maintenance`
+- **rental_status**: `pending`, `approved`, `rejected`, `completed`
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or bun
+
+### Installation
+
+1. Clone the repository:
+```bash
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. Install dependencies:
+```bash
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+4. Open [http://localhost:5173](http://localhost:5173) in your browser
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📱 Pages Overview
 
-**Use GitHub Codespaces**
+| Route | Page | Description |
+|-------|------|-------------|
+| `/` | Home | Landing page with featured properties and stats |
+| `/properties` | Properties | Browse all available properties with filters |
+| `/properties/:id` | Property Detail | Detailed view of a single property |
+| `/dashboard` | Dashboard | User's rental applications (protected) |
+| `/auth` | Authentication | Login and signup forms |
+| `/about` | About | Company information and team |
+| `/services` | Services | Services offered to renters and owners |
+| `/contact` | Contact | Contact form and company details |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔐 Authentication
 
-## What technologies are used for this project?
+The app uses email/password authentication with the following features:
+- Secure signup with email verification
+- Protected routes for authenticated users
+- Persistent sessions
+- Profile management
 
-This project is built with:
+## 🎨 Design System
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The project uses a custom design system built on Tailwind CSS with:
+- Semantic color tokens (primary, secondary, accent, etc.)
+- Consistent spacing and typography
+- Dark/Light mode support
+- Responsive breakpoints
 
-## How can I deploy this project?
+## 🧪 Development
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Available Scripts
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+# Start development server
+npm run dev
 
-Yes, you can!
+# Build for production
+npm run build
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Preview production build
+npm run preview
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+# Run linting
+npm run lint
+```
+
+## 📦 Key Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `@supabase/supabase-js` | Database and auth client |
+| `@tanstack/react-query` | Server state management |
+| `framer-motion` | Animations |
+| `lucide-react` | Icons |
+| `react-hook-form` | Form handling |
+| `zod` | Schema validation |
+| `date-fns` | Date formatting |
+| `sonner` | Toast notifications |
+
+## 🌐 Deployment
+
+The app can be deployed via Lovable:
+1. Click **Share** → **Publish** in the Lovable editor
+2. Your app will be live at `yourproject.lovable.app`
+
+For custom domains, go to **Project** → **Settings** → **Domains**.
+
+## 📄 License
+
+This project is private and proprietary.
+
+## 🤝 Contributing
+
+This project is maintained through Lovable. To contribute:
+1. Make changes in Lovable or push to the connected GitHub repository
+2. Changes sync automatically between Lovable and GitHub
+
+---
+
+Built with ❤️ using [Lovable](https://lovable.dev)
