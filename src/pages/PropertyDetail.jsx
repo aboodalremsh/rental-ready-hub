@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Layout } from "@/components/layout/Layout";
-import { propertiesApi, savedApi, rentalsApi } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuthLocal";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PropertyDetail() {
@@ -42,7 +42,13 @@ export default function PropertyDetail() {
   const fetchProperty = async () => {
     if (!id) return;
     try {
-      const data = await propertiesApi.getById(id);
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      
+      if (error) throw error;
       setProperty(data);
     } catch (error) {
       console.error("Failed to fetch property:", error);
@@ -52,17 +58,24 @@ export default function PropertyDetail() {
   };
 
   const checkIfSaved = async () => {
-    if (!isAuthenticated || !id) return;
+    if (!isAuthenticated || !id || !user) return;
     try {
-      const saved = await savedApi.check(id);
-      setIsSaved(saved);
+      const { data, error } = await supabase
+        .from("saved_properties")
+        .select("id")
+        .eq("property_id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      setIsSaved(!!data);
     } catch (error) {
       console.error("Check saved error:", error);
     }
   };
 
   const handleSaveProperty = async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       toast({ title: "Please sign in", description: "You need to be logged in to save properties.", variant: "destructive" });
       return;
     }
@@ -72,11 +85,21 @@ export default function PropertyDetail() {
     
     try {
       if (isSaved) {
-        await savedApi.unsave(id);
+        const { error } = await supabase
+          .from("saved_properties")
+          .delete()
+          .eq("property_id", id)
+          .eq("user_id", user.id);
+        
+        if (error) throw error;
         setIsSaved(false);
         toast({ title: "Removed", description: "Property removed from saved list." });
       } else {
-        await savedApi.save(id);
+        const { error } = await supabase
+          .from("saved_properties")
+          .insert({ property_id: id, user_id: user.id });
+        
+        if (error) throw error;
         setIsSaved(true);
         toast({ title: "Saved!", description: "Property added to your saved list." });
       }
@@ -88,7 +111,7 @@ export default function PropertyDetail() {
 
   const handleRentalSubmit = async (e) => {
     e.preventDefault();
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       toast({ title: "Please sign in", description: "You need to be logged in to rent a property.", variant: "destructive" });
       return;
     }
@@ -96,17 +119,22 @@ export default function PropertyDetail() {
 
     setSubmitting(true);
     try {
-      await rentalsApi.create({
-        property_id: property.id,
-        start_date: rentalData.startDate,
-        end_date: rentalData.endDate,
-        notes: rentalData.notes,
-        total_amount: property.price * 12,
-      });
+      const { error } = await supabase
+        .from("rentals")
+        .insert({
+          property_id: property.id,
+          user_id: user.id,
+          start_date: rentalData.startDate,
+          end_date: rentalData.endDate,
+          notes: rentalData.notes,
+          total_amount: Number(property.price) * 12,
+        });
+      
+      if (error) throw error;
       toast({ title: "Request Submitted!", description: "We'll review your application and get back to you soon." });
       setShowRentalForm(false);
     } catch (error) {
-      toast({ title: "Error", description: "Failed to submit rental request.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to submit rental request.", variant: "destructive" });
     }
     setSubmitting(false);
   };
@@ -136,14 +164,8 @@ export default function PropertyDetail() {
     );
   }
 
-  // Parse images if it's still a string
-  const images = typeof property.images === 'string' 
-    ? JSON.parse(property.images) 
-    : property.images || ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"];
-  
-  const amenities = typeof property.amenities === 'string'
-    ? JSON.parse(property.amenities)
-    : property.amenities || [];
+  const images = property.images || ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"];
+  const amenities = property.amenities || [];
 
   return (
     <Layout>
@@ -216,7 +238,7 @@ export default function PropertyDetail() {
           <div className="space-y-6">
             {/* Price Card */}
             <div className="bg-card p-6 rounded-2xl shadow-card sticky top-28">
-              <div className="text-3xl font-bold mb-1">${property.price.toLocaleString()}<span className="text-lg font-normal text-muted-foreground">/month</span></div>
+              <div className="text-3xl font-bold mb-1">${Number(property.price).toLocaleString()}<span className="text-lg font-normal text-muted-foreground">/month</span></div>
               <p className="text-muted-foreground text-sm mb-6">Available Now</p>
 
               {!showRentalForm ? (

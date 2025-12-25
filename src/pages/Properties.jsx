@@ -5,7 +5,7 @@ import { Search, MapPin, Bed, Bath } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Layout } from "@/components/layout/Layout";
-import { propertiesApi } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 
 const propertyTypes = ["all", "apartment", "office", "studio", "penthouse", "commercial"];
 
@@ -22,8 +22,14 @@ export default function Properties() {
 
   const fetchProperties = async () => {
     try {
-      const data = await propertiesApi.getAll();
-      setProperties(data);
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("status", "available")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setProperties(data || []);
     } catch (error) {
       console.error("Failed to fetch properties:", error);
     } finally {
@@ -114,10 +120,7 @@ export default function Properties() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredProperties.map((property, i) => {
-                // Parse images if it's a JSON string
-                const images = typeof property.images === 'string' 
-                  ? JSON.parse(property.images) 
-                  : property.images;
+                const images = property.images || [];
                 
                 return (
                   <motion.div
@@ -129,7 +132,7 @@ export default function Properties() {
                   >
                     <div className="relative h-64 overflow-hidden">
                       <img
-                        src={images?.[0] || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"}
+                        src={images[0] || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"}
                         alt={property.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
@@ -158,7 +161,7 @@ export default function Properties() {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="text-2xl font-bold">
-                          ${property.price.toLocaleString()}
+                          ${Number(property.price).toLocaleString()}
                           <span className="text-sm font-normal text-muted-foreground">/mo</span>
                         </div>
                         <Link to={`/property/${property.id}`}>
