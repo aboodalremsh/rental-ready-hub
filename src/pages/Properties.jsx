@@ -5,7 +5,7 @@ import { Search, MapPin, Bed, Bath } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Layout } from "@/components/layout/Layout";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client-safe";
 
 const propertyTypes = ["all", "apartment", "office", "studio", "penthouse", "commercial"];
 
