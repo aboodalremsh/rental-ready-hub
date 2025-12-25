@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { useAuth } from "@/hooks/useAuthLocal";
-import { rentalsApi } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,14 +23,25 @@ export default function Dashboard() {
   }, [isAuthenticated, authLoading, navigate]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       fetchRentals();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   const fetchRentals = async () => {
+    if (!user) return;
+    
     try {
-      const data = await rentalsApi.getMyRentals();
+      const { data, error } = await supabase
+        .from("rentals")
+        .select(`
+          *,
+          property:properties(*)
+        `)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
       setRentals(data || []);
     } catch (error) {
       console.error("Error fetching rentals:", error);
@@ -109,7 +120,6 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-4">
                   {rentals.map((rental) => {
-                    // Parse images if needed
                     const images = rental.property?.images || [];
                     
                     return (
@@ -150,7 +160,7 @@ export default function Dashboard() {
                           </div>
                           {rental.total_amount && (
                             <p className="mt-2 font-medium text-primary">
-                              ${rental.total_amount.toLocaleString()}
+                              ${Number(rental.total_amount).toLocaleString()}
                             </p>
                           )}
                         </div>
