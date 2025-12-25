@@ -12,10 +12,28 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
-  credentials: true
-}));
+// CORS
+// In development we allow any origin so the Lovable preview URL can call your local backend.
+// In production you should restrict this to your real domain(s).
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+      ];
+
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Health check
