@@ -47,9 +47,11 @@ async function apiRequest(endpoint, options = {}) {
 
     return data;
   } catch (error) {
-    // Handle network errors (backend not running)
-    if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
-      throw new Error('Backend server is not running. Start the Node.js server.');
+    // Fetch can fail due to server down, CORS, blocked mixed-content, VPN/proxy, firewall, etc.
+    if (error instanceof TypeError || String(error?.message || "").includes("Failed to fetch")) {
+      throw new Error(
+        "Cannot reach the backend at http://localhost:3001. Make sure the Node.js server is running on THIS device, then open http://localhost:3001/api/health to verify connectivity."
+      );
     }
     throw error;
   }
